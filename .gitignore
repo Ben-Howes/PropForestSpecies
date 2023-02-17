@@ -37,3 +37,22 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+
+# Specific Folders
+Data/*
+Results/*
+
+## Remove HTML, CSS, JS and WOFF files
+**.html
+**.css
+**.js
+**.woff
+
+## Remove images
+**.png
+**.jpg
+**.jpeg
+**.pdf
+
+## cpp files
+**.out
