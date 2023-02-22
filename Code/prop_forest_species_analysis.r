@@ -75,17 +75,12 @@ testZeroInflation(full_mod, plot = T)
 summary(full_mod)
 
 ## I have successfully run a random effect binomial model, with all variables are predictors and then random intercepts for the taxa
-## This however does not look great when assessing diagnostics with DHARMa, with a key issue being spatial autocorrelation
-## I can run spatial autocorrelation models to account for this, and will
+## This however does not look great when assessing diagnostics with DHARMa, with a key issue being spatial autocorrelation - tested on individually models
+## I can run spatial autocorrelation models to account for this - from running sample data they seem to fix nearly all diagnostic issues
 ## But this will need to be done on the HPC as the computing time is too long
 ## I will run models for each taxa individually
 ## and also try to do a random effect verison, though this will likely have big issues with convergence, and we only have four groups in our random factor
 ## so most likely will do individual models and show results for all of them combined
-
-
-dat$pos <- numFactor(scale(dat$x), scale(dat$y))
-# then create a dummy group factor to be used as a random term
-dat$ID <- factor(rep(1, nrow(dat)))
 
 #################################################################################
 ## For now without spatial autocorrelation 

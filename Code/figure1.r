@@ -1,4 +1,3 @@
-library(tidyverse)
 ######################################################################################
 ## Plot proportion forest species of each taxa
 ## Small land area cells (<100km) have been removed to aid visualisation
