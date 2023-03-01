@@ -13,10 +13,10 @@ setwd(gpath)
 
 run = commandArgs(trailingOnly = TRUE)
 
-filtered_taxa = case_when(run %in% seq(1, 1000, by = 1) ~ "amphibians", 
-                          run %in% seq(1001, 2000, by = 1) ~ "birds", 
-                          run %in% seq(2001, 3000, by = 1) ~ "mammals",
-                          run %in% seq(3001, 4000, by = 1) ~ "reptiles")
+filtered_taxa = case_when(run %in% seq(1, 100, by = 1) ~ "amphibians", 
+                          run %in% seq(101, 200, by = 1) ~ "birds", 
+                          run %in% seq(201, 300, by = 1) ~ "mammals",
+                          run %in% seq(301, 400, by = 1) ~ "reptiles")
 
 # Run model accounting for spatial autocorrelation
 mod_data = read_csv(paste0(gpath, "Data/proportion_forest_species_analysis_data.csv"))
