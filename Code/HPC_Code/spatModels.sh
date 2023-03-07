@@ -1,6 +1,6 @@
 #PBS -l walltime=72:00:00
 #PBS -l select=1:ncpus=1:mem=64gb
-#PBS -J 1-400
+#PBS -J 1-4000
 
 module load anaconda3/personal
 
