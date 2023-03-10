@@ -143,9 +143,6 @@ prop_forest_df = as.data.frame(forest_prop_maps, xy = T) %>% dplyr::select(-tota
 
 prop_forest_df = prop_forest_df %>% left_join(total_df) %>% relocate(x,y,prop_forest,n_spec,prop_forest_area,taxa)
 
-## Write this dataframe for plotting figure1, this needs to include NA values and cells etc before filtering
-write_csv(prop_forest_df, paste0(gpath, "Data/proportion_forest_species_map_data.csv"))
-
 ## Remove rows that have no species and no land area
 ## Also use a cut off for what cells are included based on total species from which proportions are calculated
 ## and the total land area
