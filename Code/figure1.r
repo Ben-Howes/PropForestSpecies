@@ -16,6 +16,7 @@ library(terra)
 library(maptools)
 library(colorspace)
 library(tidyterra)
+library(ggimage)
 
 gpath = "/home/ben/Documents/PhD/PropForestSpecies/"
 setwd(gpath)
@@ -32,16 +33,45 @@ coast = st_read("../Raw_Data/gshhg-shp-2.3.7/GSHHS_shp/c/GSHHS_c_L1.shp")
 coast = st_transform(coast, behr)
 coast_outline = st_cast(coast, "MULTILINESTRING")
 
-figure1_data = prop_forest_df %>% filter(!is.na(n_spec) & n_spec >= 10 & !is.na(land) & land > 0.1) %>%
-  mutate(prop_forest = ifelse(is.na(prop_forest), 0, prop_forest))
+coast_rast = coast %>% terra::rasterize(template_raster, touchess = TRUE, background = NA)
 
-figure1_data = dplyr::select(figure1_data, x, y, prop_forest, taxa) %>% group_split(taxa) %>% 
+figure1_data = prop_forest_df
+
+figure1_map_data = dplyr::select(figure1_data, x, y, prop_forest, taxa) %>% group_split(taxa) %>% 
   map(., ~rast(dplyr::select(., x,y,prop_forest), crs = behr) %>% 
   project(template_raster)) %>% rast()
 
-names(figure1_data) = c("amphibians", "birds", "mammals", "reptiles")
+## Set names of each raster layer
+names(figure1_map_data) = c("Amphibians", "Birds", "Mammals", "Reptiles")
 
-ggplot() + geom_spatraster(data = figure1_data) + facet_wrap(.~lyr, ncol = 2) + 
-  geom_sf(data = coast_outline) +
-  theme_classic() + scale_fill_viridis_c(na.value = "white") + 
-  labs(fill = "Proportion Forest Species")
+## Change facet labels
+facet_labels =  c(
+  "Amphibians"="A)",
+  "Birds"="B)",
+  "Mammals"="C)",
+  "Reptiles"="D)"
+)
+
+## Create plot
+maps = ggplot() + 
+        geom_sf(data = coast, fill = "grey70") + 
+        geom_spatraster(data = figure1_map_data) + 
+        geom_sf(data = coast_outline, linewidth = 0.75) +
+        facet_wrap(.~lyr, ncol = 2, labeller = as_labeller(facet_labels)) + 
+        theme_classic() + 
+        scale_fill_viridis_c(na.value = "transparent", breaks = c(0, 0.25, 0.5, 0.75),
+        limits = c(0,0.75)) + 
+        labs(fill = "Proportion of Forest Species") +
+        theme(text = element_text(size = 30),
+          strip.background = element_blank(),
+          strip.text.x = element_blank()) +
+          # strip.text.x = element_text(hjust = 0, margin=margin(l=0))) +
+        theme(legend.position="bottom") +
+        guides(fill = guide_colourbar(barwidth=35, 
+                      ticks = TRUE, frame.colour = "black", 
+                      frame.linewidth = 0.5, title.position = "top",
+                      title.hjust = 0.5, title.vjust = -0.5)) 
+
+maps
+
+ggsave(paste0(gpath, "Paper/Figures/prop_map.png"), plot = maps, width = 20, height = 10)

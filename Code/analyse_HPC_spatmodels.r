@@ -52,10 +52,12 @@ effect_size_plot = ggplot(filter(results, predictor != "Intercept"), aes(est, y 
                         labs(x = "Standardised Effect Size", y = NULL, col = "Taxa") +
                         scale_color_viridis_d(limits = c("Amphibians", "Birds", "Mammals", "Reptiles")) +
                         theme(text = element_text(size = 35)) +
-                        guides(linetype = FALSE) +
-                        theme(legend.position = c(0.15, 0.725),
+                        guides(linetype = "none", col = guide_legend(byrow = TRUE, title.vjust = 5)) +
+                        theme(legend.position = c(0.15, 0.75),
+                                legend.spacing.y = unit(-0.75, 'cm'),
                                 legend.box.background = element_rect(colour = "black", 
-                                linewidth = 1.5)) +
+                                linewidth = 2),
+                                legend.margin = margin(t=50,r=20,b=1,l=10)) +
                         scale_y_discrete(limits = rev(c("Proportion Forested Area", "Proportion Historic Forest Loss", 
                                                         "Proportion Forested Area x\nProportion Historic Forest Loss",
                                                         "Naturally Disturbed Area", "Long Term Forest Status",
@@ -85,13 +87,23 @@ dat = dat %>% dplyr::select(prop_forest_area, historical_forest_loss, taxa) %>%
                 mutate(scaled_prop_forest_area = scale(prop_forest_area),
                 scaled_historical_forest_loss = scale(historical_forest_loss))
 
-## I think doing values of -1 SD, 0 SD, and +1SD make sense
-## Though there is no -1 SD, so we will just use the lowest which is -0.571
-## Which will be No, Average, and high
+## Function to unscale values
+unscale = function(x, term) {
+        val = x * attr(dat[[term]], 'scaled:scale') + attr(dat[[term]], 'scaled:center')
+        return(val)
+}
+
+## I think doing values of -0.5 SD, 0 SD, and +1SD make sense
+## Which are equivalent to the below values of forest loss
+unscale(-0.5, term = "scaled_prop_forest_area") # 0.02% 
+unscale(0, term = "scaled_prop_forest_area") # 0.175
+unscale(1, term = "scaled_prop_forest_area") # 0.48
+
+## Which will be Low, Average, and high
 
 # Then we can get the maximum proporion_forest_area that accompany these
-dat %>% slice_min(scaled_historical_forest_loss) %>% slice_max(scaled_prop_forest_area, with_ties = F) ## 2.68
-dat %>% slice_min(scaled_historical_forest_loss) %>% slice_min(scaled_prop_forest_area, with_ties = F) ## -0.571
+dat %>% filter(scaled_historical_forest_loss > -0.5) %>% slice_max(scaled_prop_forest_area, with_ties = F) ## 2.68
+dat %>% filter(scaled_historical_forest_loss > -0.5) %>% slice_min(scaled_prop_forest_area, with_ties = F) ## -0.571
 
 dat %>% filter(scaled_historical_forest_loss > 0) %>% slice_max(scaled_prop_forest_area, with_ties = F) ## 2.52
 dat %>% filter(scaled_historical_forest_loss > 0) %>% slice_min(scaled_prop_forest_area, with_ties = F) ## -0.571
@@ -100,7 +112,7 @@ dat %>% filter(scaled_historical_forest_loss > 1) %>% slice_max(scaled_prop_fore
 dat %>% filter(scaled_historical_forest_loss > 1) %>% slice_min(scaled_prop_forest_area, with_ties = F) ## -0.571
 
 ## So these can be our limits on this prediction grid
-prediction_grid = expand.grid(x = seq(-0.571, 2.68, length.out = 100), y = -0.571) %>%
+prediction_grid = expand.grid(x = seq(-0.571, 2.68, length.out = 100), y = -0.5) %>%
                   bind_rows(expand.grid(x = seq(-0.571, 2.52, length.out = 100), y = 0)) %>%
                   bind_rows(expand.grid(x = seq(-0.571, 1.18, length.out = 100), y = 1))
 
@@ -132,19 +144,25 @@ out = mapply(x = prediction_grid$x,
 
 predicted_results = mclapply(results_split, get_prediction, mc.cores = 8) %>% bind_rows()
 
+## Add unscaled historic loss and forest prop as columns for plotting
+predicted_results = predicted_results %>%
+                        mutate(unscaled_prop_forest_area = unscale(prop_forest_area, "scaled_prop_forest_area")) %>%
+                        mutate(unscaled_historic_forest_loss = unscale(historic_forest_loss, "scaled_historical_forest_loss"))
+
 facet_labels =  c(
-  "-0.571"="Low Amount of\nHistoric Forest Loss",
+  "-0.5"="Low Amount of\nHistoric Forest Loss",
   "0"="Average Amount of\nHistoric Forest Loss",
   "1"="High Amount of\nHistoric Forest Loss"
 )
 
-interaction_term_plot = ggplot(predicted_results, aes(prop_forest_area, est)) + 
+interaction_term_plot = ggplot(predicted_results, aes(unscaled_prop_forest_area, est)) + 
                         stat_lineribbon(alpha = 0.2, fill = "grey40") + 
                         facet_rep_wrap(. ~ historic_forest_loss, labeller = as_labeller(facet_labels)) +
                         theme_classic() +
-                        labs(x = "Proportion Forested Area (Standardised)", y = 
+                        labs(x = "Proportion Forested Area", y = 
                                 "Probability of Forest Species") +
-                        theme(text = element_text(size = 35))
+                        theme(text = element_text(size = 35)) +
+                        scale_x_continuous(breaks = c(0, 0.25, 0.5, 0.75, 1))
 
 interaction_term_plot
 
