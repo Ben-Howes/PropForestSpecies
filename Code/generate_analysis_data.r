@@ -64,7 +64,7 @@ loss_rast = rast(paste0(gpath, "Data/Ranges/loss_rast.tif"))
 loss_rast = mask(loss_rast, coast)
 
 ggplot() + geom_spatraster(data = loss_rast) + geom_sf(data = coast_outline) + scale_fill_viridis_c(na.value = "white") +
-  theme_classic() + labs(fill = "Proportion of Forest Loss")
+  theme_classic() + labs(fill = "Proportion of Land Area Deforested")
 
 ## Add this raster to the stack of proportion forest species rasters
 forest_prop_maps = c(forest_prop_maps, loss_rast)

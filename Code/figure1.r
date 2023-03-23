@@ -35,9 +35,7 @@ coast_outline = st_cast(coast, "MULTILINESTRING")
 
 coast_rast = coast %>% terra::rasterize(template_raster, touchess = TRUE, background = NA)
 
-figure1_data = prop_forest_df
-
-figure1_map_data = dplyr::select(figure1_data, x, y, prop_forest, taxa) %>% group_split(taxa) %>% 
+figure1_map_data = dplyr::select(prop_forest_df, x, y, prop_forest, taxa) %>% group_split(taxa) %>% 
   map(., ~rast(dplyr::select(., x,y,prop_forest), crs = behr) %>% 
   project(template_raster)) %>% rast()
 
@@ -52,12 +50,16 @@ facet_labels =  c(
   "Reptiles"="D)"
 )
 
+########################
+## Plot with all four taxa maps together
+########################
+
 ## Create plot
 maps = ggplot() + 
         geom_sf(data = coast, fill = "grey70") + 
         geom_spatraster(data = figure1_map_data) + 
         geom_sf(data = coast_outline, linewidth = 0.75) +
-        facet_wrap(.~lyr, ncol = 2, labeller = as_labeller(facet_labels)) + 
+        facet_wrap(.~lyr, ncol = 1, labeller = as_labeller(facet_labels)) + 
         theme_classic() + 
         scale_fill_viridis_c(na.value = "transparent", breaks = c(0, 0.25, 0.5, 0.75),
         limits = c(0,0.75)) + 

@@ -12,13 +12,13 @@ library(raster)
 library(terra)
 library(parallel)
 
-gpath = "/home/ben/Documents/PhD/matrix_Response/"
+gpath = "/home/ben/Documents/PhD/PropForestSpecies/"
 setwd(gpath)
 
 ## Get paths to IUCN shapefiles
-amphib_path = "/home/ben/Documents/PhD/matrix_Response/Data/Ranges/AMPHIBIANS/AMPHIBIANS.shp"
-mammal_path = "/home/ben/Documents/PhD/matrix_Response/Data/Ranges/MAMMALS/MAMMALS.shp"
-reptile_path = "/home/ben/Documents/PhD/matrix_Response/Data/Ranges/REPTILES/REPTILES.shp"
+amphib_path = "/home/ben/Documents/PhD/PropForestSpecies/Data/Ranges/AMPHIBIANS/AMPHIBIANS.shp"
+mammal_path = "/home/ben/Documents/PhD/PropForestSpecies/Data/Ranges/MAMMALS/MAMMALS.shp"
+reptile_path = "/home/ben/Documents/PhD/PropForestSpecies/Data/Ranges/REPTILES/REPTILES.shp"
 
 ## Get habitat data for each taxa group
 
@@ -108,7 +108,8 @@ sf_use_s2(FALSE)
 
 ## First remove species which are extinct, or have non-bredding seasonal ranges
 ## to minimise the time the next functions take to run
-birds = birds %>% filter(presence == 1 & origin == 1 & seasonal %in% c(1,2))
+birds = birds %>% filter(presence == 1 & origin == 1 & seasonal %in% c(1,2)) %>%
+  mutate(sci_name = tolower(gsub(pattern = " ", "_", sci_name)))
 
 ## Also remove all marine species, these won't be included in the analysis and will again
 ## reduce the time taken for the next functions

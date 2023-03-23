@@ -4,7 +4,7 @@
 library(tidyverse)
 library(terra)
 
-gpath = "/home/ben/Documents/PhD/matrix_Response/"
+gpath = "/home/ben/Documents/PhD/PropForestSpecies/"
 setwd(gpath)
 
 ## Load forest map
