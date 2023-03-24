@@ -50,16 +50,16 @@ facet_labels =  c(
   "Reptiles"="D)"
 )
 
-########################
+################################################
 ## Plot with all four taxa maps together
-########################
+################################################
 
 ## Create plot
 maps = ggplot() + 
         geom_sf(data = coast, fill = "grey70") + 
         geom_spatraster(data = figure1_map_data) + 
         geom_sf(data = coast_outline, linewidth = 0.75) +
-        facet_wrap(.~lyr, ncol = 1, labeller = as_labeller(facet_labels)) + 
+        facet_wrap(.~lyr, ncol = 2, labeller = as_labeller(facet_labels)) + 
         theme_classic() + 
         scale_fill_viridis_c(na.value = "transparent", breaks = c(0, 0.25, 0.5, 0.75),
         limits = c(0,0.75)) + 
@@ -77,3 +77,35 @@ maps = ggplot() +
 maps
 
 ggsave(paste0(gpath, "Paper/Figures/prop_map.png"), plot = maps, width = 20, height = 10)
+
+################################################
+## Plot individual maps and then grid them together
+################################################
+
+## Make amphibian map
+amphib_map = ggplot() + 
+            geom_sf(data = coast, fill = "grey70") + 
+            geom_spatraster(data = figure1_map_data$Amphibians) + 
+            geom_sf(data = coast_outline, linewidth = 0.75) +
+            theme_classic() + 
+            scale_fill_viridis_c(na.value = "transparent", breaks = c(0, 0.25, 0.5, 0.75),
+            limits = c(0,0.75)) + 
+            labs(fill = "Proportion of Forest Species") +
+            theme(legend.position = "none")
+
+amphib_density = ggplot(prop_forest_df, aes(y, prop_forest)) + 
+  geom_smooth(aes(col = after_stat(y)), se = F, linewidth = 3) +
+  coord_flip() +
+  theme_classic() +
+  scale_colour_viridis_c() +
+  theme(legend.position = "none") +
+  labs(x = NULL, y = "Proportion of Forest Species") +
+  theme(text = element_text(size = 30),
+  axis.text.y = element_blank(),
+  axis.text.x = element_blank())
+
+amphib_density
+
+test = amphib_map + amphib_density
+test
+ggsave(paste0(gpath, "Paper/Figures/test.png"), plot = test, width = 20, height = 10)
