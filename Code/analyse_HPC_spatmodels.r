@@ -32,11 +32,11 @@ results = mclapply(result_paths, read_csv, show_col_types = FALSE, mc.cores = 8)
 results = results %>% 
            mutate(predictor = case_when(predictor == '(Intercept)' ~ "Intercept",
                                         predictor == "prop_forest_area" ~ "Proportion Forested Area",
-                                        predictor == "historical_forest_loss" ~ "Proportion Historic Forest Loss",
+                                        predictor == "prop_land_area_deforested" ~ "Proportion of Area Deforested",
                                         predictor == "disturbances" ~ "Naturally Disturbed Area",
-                                        predictor == "dist_equator_1000km" ~ "Distance from Equator\n(1000km)",
+                                        predictor == "dist_equator_1000km" ~ "Latitude\n(Distance from Equator)",
                                         predictor == "geological_forest" ~ "Long Term Forest Status",
-                                        predictor == "prop_forest_area:historical_forest_loss" ~ "Proportion Forested Area x\nProportion Historic Forest Loss"),
+                                        predictor == "prop_forest_area:prop_land_area_deforested" ~ "Proportion Forested Area x\nProportion of Area Deforested"),
                 taxa = factor(str_to_title(taxa), levels = c("Amphibians", "Birds", "Mammals", "Reptiles")))
 
 ############################
@@ -53,15 +53,15 @@ effect_size_plot = ggplot(filter(results, predictor != "Intercept"), aes(est, y 
                         scale_color_viridis_d(limits = c("Amphibians", "Birds", "Mammals", "Reptiles")) +
                         theme(text = element_text(size = 35)) +
                         guides(linetype = "none", col = guide_legend(byrow = TRUE, title.vjust = 5)) +
-                        theme(legend.position = c(0.15, 0.75),
+                        theme(legend.position = c(0.16, 0.75),
                                 legend.spacing.y = unit(-0.75, 'cm'),
                                 legend.box.background = element_rect(colour = "black", 
                                 linewidth = 2),
                                 legend.margin = margin(t=50,r=20,b=1,l=10)) +
-                        scale_y_discrete(limits = rev(c("Proportion Forested Area", "Proportion Historic Forest Loss", 
-                                                        "Proportion Forested Area x\nProportion Historic Forest Loss",
+                        scale_y_discrete(limits = rev(c("Proportion Forested Area", "Proportion of Area Deforested", 
+                                                        "Proportion Forested Area x\nProportion of Area Deforested",
                                                         "Naturally Disturbed Area", "Long Term Forest Status",
-                                                        "Distance from Equator\n(1000km)")))
+                                                        "Latitude\n(Distance from Equator)")))
 
 effect_size_plot
 
@@ -83,9 +83,9 @@ dat = read_csv(paste0(gpath, "Data/proportion_forest_species_analysis_data.csv")
 
 ## Just keep values we are interested in and
 ## Scale variables so they are comparable to our model
-dat = dat %>% dplyr::select(prop_forest_area, historical_forest_loss, taxa) %>%
+dat = dat %>% dplyr::select(prop_forest_area, prop_land_area_deforested, taxa) %>%
                 mutate(scaled_prop_forest_area = scale(prop_forest_area),
-                scaled_historical_forest_loss = scale(historical_forest_loss))
+                scaled_prop_land_area_deforested = scale(prop_land_area_deforested))
 
 ## Function to unscale values
 unscale = function(x, term) {
@@ -102,19 +102,19 @@ unscale(1, term = "scaled_prop_forest_area") # 0.48
 ## Which will be Low, Average, and high
 
 # Then we can get the maximum proporion_forest_area that accompany these
-dat %>% filter(scaled_historical_forest_loss > -0.5) %>% slice_max(scaled_prop_forest_area, with_ties = F) ## 2.68
-dat %>% filter(scaled_historical_forest_loss > -0.5) %>% slice_min(scaled_prop_forest_area, with_ties = F) ## -0.571
+dat %>% filter(scaled_prop_land_area_deforested > -0.5) %>% slice_max(scaled_prop_forest_area, with_ties = F) ## 2.68
+dat %>% filter(scaled_prop_land_area_deforested > -0.5) %>% slice_min(scaled_prop_forest_area, with_ties = F) ## -0.571
 
-dat %>% filter(scaled_historical_forest_loss > 0) %>% slice_max(scaled_prop_forest_area, with_ties = F) ## 2.52
-dat %>% filter(scaled_historical_forest_loss > 0) %>% slice_min(scaled_prop_forest_area, with_ties = F) ## -0.571
+dat %>% filter(scaled_prop_land_area_deforested > 0) %>% slice_max(scaled_prop_forest_area, with_ties = F) ## 2.52
+dat %>% filter(scaled_prop_land_area_deforested > 0) %>% slice_min(scaled_prop_forest_area, with_ties = F) ## -0.571
 
-dat %>% filter(scaled_historical_forest_loss > 1) %>% slice_max(scaled_prop_forest_area, with_ties = F) ## 1.18
-dat %>% filter(scaled_historical_forest_loss > 1) %>% slice_min(scaled_prop_forest_area, with_ties = F) ## -0.571
+dat %>% filter(scaled_prop_land_area_deforested > 1) %>% slice_max(scaled_prop_forest_area, with_ties = F) ## 1.61
+dat %>% filter(scaled_prop_land_area_deforested > 1) %>% slice_min(scaled_prop_forest_area, with_ties = F) ## -0.571
 
 ## So these can be our limits on this prediction grid
 prediction_grid = expand.grid(x = seq(-0.571, 2.68, length.out = 100), y = -0.5) %>%
                   bind_rows(expand.grid(x = seq(-0.571, 2.52, length.out = 100), y = 0)) %>%
-                  bind_rows(expand.grid(x = seq(-0.571, 1.18, length.out = 100), y = 1))
+                  bind_rows(expand.grid(x = seq(-0.571, 1.61, length.out = 100), y = 1))
 
 get_prediction = function(x) {
 
@@ -135,7 +135,7 @@ out = mapply(x = prediction_grid$x,
              y = prediction_grid$y, make_predictions,
              SIMPLIFY = F) %>% bind_rows() %>%
              mutate(prop_forest_area = prediction_grid$x) %>%
-             mutate(historic_forest_loss = prediction_grid$y) %>%
+             mutate(prop_land_area_deforested = prediction_grid$y) %>%
              mutate(taxa = x$taxa[[1]]) %>%
              mutate(run = x$run[[1]]) %>%
              mutate(est = exp(est)/1+exp(est))
@@ -147,17 +147,17 @@ predicted_results = mclapply(results_split, get_prediction, mc.cores = 8) %>% bi
 ## Add unscaled historic loss and forest prop as columns for plotting
 predicted_results = predicted_results %>%
                         mutate(unscaled_prop_forest_area = unscale(prop_forest_area, "scaled_prop_forest_area")) %>%
-                        mutate(unscaled_historic_forest_loss = unscale(historic_forest_loss, "scaled_historical_forest_loss"))
+                        mutate(unscaled_prop_land_area_deforested = unscale(prop_land_area_deforested, "scaled_prop_land_area_deforested"))
 
 facet_labels =  c(
-  "-0.5"="Low Amount of\nHistoric Forest Loss",
-  "0"="Average Amount of\nHistoric Forest Loss",
-  "1"="High Amount of\nHistoric Forest Loss"
+  "-0.5"="Low Amount of\nDeforestation",
+  "0"="Average Amount of\nDeforestation",
+  "1"="High Amount of\nDeforestation"
 )
 
 interaction_term_plot = ggplot(predicted_results, aes(unscaled_prop_forest_area, est)) + 
                         stat_lineribbon(alpha = 0.2, fill = "grey40") + 
-                        facet_rep_wrap(. ~ historic_forest_loss, labeller = as_labeller(facet_labels)) +
+                        facet_rep_wrap(. ~ prop_land_area_deforested, labeller = as_labeller(facet_labels)) +
                         theme_classic() +
                         labs(x = "Proportion Forested Area", y = 
                                 "Probability of Forest Species") +
