@@ -65,7 +65,7 @@ effect_size_plot = ggplot(filter(results, predictor != "Intercept"), aes(est, y 
 
 effect_size_plot
 
-ggsave(paste0(gpath, "Paper/Figures/effect_size_plot.png"), plot = effect_size_plot, width = 20, height = 10)
+# ggsave(paste0(gpath, "Paper/Figures/effect_size_plot.png"), plot = effect_size_plot, width = 20, height = 10)
 
 ############################
 ## Plot of interaction term between forest cover and historic forest loss
@@ -123,13 +123,13 @@ get_prediction = function(x) {
         interaction = x[7,2]
         intercept = x[1,2]
 
-make_predictions = function(x, y) {
-        predicted =  (prop_forest_area*x) + 
-                     (historic_forest_loss*y) + 
-                     (x*y*interaction) + 
-                     intercept
-        return(predicted)
-        }
+        make_predictions = function(x, y) {
+                predicted =  (prop_forest_area*x) + 
+                        (historic_forest_loss*y) + 
+                        (x*y*interaction) + 
+                        intercept
+                return(predicted)
+                }
 
 out = mapply(x = prediction_grid$x, 
              y = prediction_grid$y, make_predictions,
@@ -166,4 +166,5 @@ interaction_term_plot = ggplot(predicted_results, aes(unscaled_prop_forest_area,
 
 interaction_term_plot
 
-ggsave(paste0(gpath, "Paper/Figures/interaction_term_plot.png"), plot = interaction_term_plot, width = 20, height = 10)
+# ggsave(paste0(gpath, "Paper/Figures/interaction_term_plot.png"), plot = interaction_term_plot, width = 20, height = 10)
+

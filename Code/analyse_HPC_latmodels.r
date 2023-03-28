@@ -31,7 +31,7 @@ results = mclapply(result_paths, read_csv, show_col_types = FALSE, mc.cores = 8)
 ## Change names of predictors for the plot
 results = results %>% 
            mutate(predictor = case_when(predictor == '(Intercept)' ~ "Intercept",
-                                        predictor == "dist_equator_1000km" ~ "Distance from Equator\n(1000km)"),
+                                        predictor == "dist_equator_1000km" ~ "Latitude\n(Distance from Equator)"),
                 taxa = factor(str_to_title(taxa), levels = c("Amphibians", "Birds", "Mammals", "Reptiles")))
 
 ############################
@@ -53,8 +53,68 @@ effect_size_plot = ggplot(filter(results, predictor != "Intercept"), aes(est, y 
                                 legend.box.background = element_rect(colour = "black", 
                                 linewidth = 2),
                                 legend.margin = margin(t=50,r=20,b=1,l=10)) +
-                        scale_y_discrete(limits = rev(c("Distance from Equator\n(1000km)")))
+                        scale_y_discrete(limits = rev(c("Latitude\n(Distance from Equator)")))
 
 effect_size_plot
 
-ggsave(paste0(gpath, "Paper/Figures/lat_effect_size_plot.png"), plot = effect_size_plot, width = 20, height = 10)
+# ggsave(paste0(gpath, "Paper/Figures/lat_effect_size_plot.png"), plot = effect_size_plot, width = 20, height = 10)
+
+
+#############################################
+## Make predictions for examples in paper
+#############################################
+
+## Split data into each model for lapplying over
+results_split = results %>% filter(taxa == "Birds") %>% group_split(run)
+
+## Load in our actual data
+dat = read_csv(paste0(gpath, "Data/proportion_forest_species_analysis_data.csv"))
+
+## Just keep values we are interested in and
+## Scale variables so they are comparable to our model
+dat = dat %>% dplyr::select(dist_equator_1000km, taxa) %>%
+                mutate(scaled_dist_equator_1000km = scale(dist_equator_1000km))
+
+## Function to unscale values
+unscale = function(x, term) {
+        val = x * attr(dat[[term]], 'scaled:scale') + attr(dat[[term]], 'scaled:center')
+        return(val)
+}
+
+get_prediction = function(x) {
+
+        dist_equator_1000km = x[2,2]
+        intercept = x[1,2]
+
+        make_predictions = function(x, y) {
+                predicted =  (dist_equator_1000km*x) +
+                        intercept
+                return(predicted)
+                }
+
+        out = mapply(x = seq(min(dat$scaled_dist_equator_1000km ),
+                max(dat$scaled_dist_equator_1000km), length.out = 100),
+                make_predictions,
+                SIMPLIFY = F) %>% bind_rows() %>%
+                mutate(scaled_dist_equator_1000km = seq(min(dat$scaled_dist_equator_1000km ),
+                max(dat$scaled_dist_equator_1000km), length.out = 100)) %>%
+                mutate(taxa = x$taxa[[1]]) %>%
+                mutate(run = x$run[[1]]) %>%
+                mutate(est = exp(est)/1+exp(est))
+
+}
+
+predicted_results = mclapply(results_split, get_prediction, mc.cores = 8) %>% bind_rows()
+
+## Unscale latitude
+predicted_results = predicted_results %>% mutate(dist_equator_1000km = unscale(scaled_dist_equator_1000km, "scaled_dist_equator_1000km"))
+
+## Find the mean at each dist equator to get a mean prediction
+mean_predicted_results = predicted_results %>% 
+        group_by(dist_equator_1000km) %>%
+        summarise(propForest = mean(est))
+
+## Get % forest species at different latitudes for use in text
+ mean_predicted_results$dist_equator_1000km %>% min()
+ mean_predicted_results %>% filter(dist_equator_1000km > 4.9 & dist_equator_1000km < 5.1)
+ mean_predicted_results %>% filter(dist_equator_1000km > 4.9 & dist_equator_1000km < 5.1)
