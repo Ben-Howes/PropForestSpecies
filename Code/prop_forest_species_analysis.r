@@ -79,8 +79,6 @@ summary(full_mod)
 ## I can run spatial autocorrelation models to account for this - from running sample data they seem to fix nearly all diagnostic issues
 ## But this will need to be done on the HPC as the computing time is too long
 ## I will run models for each taxa individually
-## and also try to do a random effect verison, though this will likely have big issues with convergence, and we only have four groups in our random factor
-## so most likely will do individual models and show results for all of them combined
 
 #################################################################################
 ## For now without spatial autocorrelation 

@@ -76,7 +76,7 @@ maps = ggplot() +
 
 maps
 
-ggsave(paste0(gpath, "Paper/Figures/prop_map.png"), plot = maps, width = 20, height = 10)
+# ggsave(paste0(gpath, "Paper/Figures/prop_map.png"), plot = maps, width = 20, height = 10)
 
 ################################################
 ## Plot individual maps and then grid them together
@@ -91,21 +91,27 @@ amphib_map = ggplot() +
             scale_fill_viridis_c(na.value = "transparent", breaks = c(0, 0.25, 0.5, 0.75),
             limits = c(0,0.75)) + 
             labs(fill = "Proportion of Forest Species") +
-            theme(legend.position = "none")
+            theme(legend.position = "none") +
+            scale_x_continuous(expand = c(0, 0)) +
+            scale_y_continuous(expand = c(0, 0)) 
+
+amphib_map
 
 amphib_density = ggplot(prop_forest_df, aes(y, prop_forest)) + 
-  geom_smooth(aes(col = after_stat(y)), se = F, linewidth = 3) +
+  geom_smooth(aes(col = after_stat(y)), se = F, linewidth = 5) +
   coord_flip() +
   theme_classic() +
   scale_colour_viridis_c() +
   theme(legend.position = "none") +
-  labs(x = NULL, y = "Proportion of Forest Species") +
+  labs(x = NULL, y = NULL) +
   theme(text = element_text(size = 30),
-  axis.text.y = element_blank(),
-  axis.text.x = element_blank())
+  axis.text= element_blank(),
+  axis.ticks = element_blank(),
+  axis.line = element_line(linewidth = 2))
 
 amphib_density
 
 test = amphib_map + amphib_density
-test
-ggsave(paste0(gpath, "Paper/Figures/test.png"), plot = test, width = 20, height = 10)
+
+ggsave(paste0(gpath, "Paper/Figures/test1.png"), plot = amphib_map, width = 15, height = 10)
+ggsave(paste0(gpath, "Paper/Figures/test.png"), plot = amphib_density, width = 5, height = 10)
