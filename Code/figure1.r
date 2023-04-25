@@ -17,6 +17,7 @@ library(maptools)
 library(colorspace)
 library(tidyterra)
 library(ggimage)
+library(cowplot)
 
 gpath = "/home/ben/Documents/PhD/PropForestSpecies/"
 setwd(gpath)
@@ -87,31 +88,169 @@ amphib_map = ggplot() +
             geom_sf(data = coast, fill = "grey70") + 
             geom_spatraster(data = figure1_map_data$Amphibians) + 
             geom_sf(data = coast_outline, linewidth = 0.75) +
-            theme_classic() + 
+            theme_void() + 
             scale_fill_viridis_c(na.value = "transparent", breaks = c(0, 0.25, 0.5, 0.75),
             limits = c(0,0.75)) + 
             labs(fill = "Proportion of Forest Species") +
             theme(legend.position = "none") +
             scale_x_continuous(expand = c(0, 0)) +
-            scale_y_continuous(expand = c(0, 0)) 
+            scale_y_continuous(expand = c(0, 0)) +
+            geom_hline(yintercept = 0, linetype = "dashed") +
+            # geom_hline(yintercept = max(prop_forest_df[prop_forest_df$taxa == "amphibians",]$y)) +
+            # geom_hline(yintercept = min(prop_forest_df[prop_forest_df$taxa == "amphibians",]$y)) +
+            theme(plot.margin = unit(c(0.25,0,0.68,0), "cm"))
 
 amphib_map
 
-amphib_density = ggplot(prop_forest_df, aes(y, prop_forest)) + 
-  geom_smooth(aes(col = after_stat(y)), se = F, linewidth = 5) +
-  coord_flip() +
+amphib_density = ggplot(filter(prop_forest_df, taxa == "amphibians"), aes(y, prop_forest)) + 
+  stat_smooth(aes(col = after_stat(y)), se = F, linewidth = 5, n = 2500) +
+  coord_flip(ylim = c(0, 0.4)) +
   theme_classic() +
-  scale_colour_viridis_c() +
+  scale_colour_viridis_c(limits = c(0 ,0.75)) +
   theme(legend.position = "none") +
   labs(x = NULL, y = NULL) +
-  theme(text = element_text(size = 30),
+  theme(text = element_text(size = 20),
   axis.text= element_blank(),
   axis.ticks = element_blank(),
-  axis.line = element_line(linewidth = 2))
+  axis.line = element_line(linewidth = 1),
+  axis.line.x = element_blank()) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  # geom_vline(xintercept = max(prop_forest_df[prop_forest_df$taxa == "amphibians",]$y)) +
+  # geom_vline(xintercept = min(prop_forest_df[prop_forest_df$taxa == "amphibians",]$y)) +
+  theme(plot.margin = unit(c(0.5,0.5,0.86,0), "cm")) +
+  xlim(-7367884, 7342230)
 
 amphib_density
 
-test = amphib_map + amphib_density
+a = plot_grid(amphib_map, amphib_density, rel_widths = c(1, 0.2), labels = c("A1)", "A2)"), label_size = 35)
 
-ggsave(paste0(gpath, "Paper/Figures/test1.png"), plot = amphib_map, width = 15, height = 10)
-ggsave(paste0(gpath, "Paper/Figures/test.png"), plot = amphib_density, width = 5, height = 10)
+ggsave(paste0(gpath, "Paper/Figures/TaxaMaps/amphibian_map.png"), plot = a, width = 20, height = 8.3)
+
+## Make bird map
+bird_map = ggplot() + 
+            geom_sf(data = coast, fill = "grey70") + 
+            geom_spatraster(data = figure1_map_data$Birds) + 
+            geom_sf(data = coast_outline, linewidth = 0.75) +
+            theme_void() + 
+            scale_fill_viridis_c(na.value = "transparent", breaks = c(0, 0.25, 0.5, 0.75),
+            limits = c(0,0.75)) + 
+            labs(fill = "Proportion of Forest Species") +
+            theme(legend.position = "none") +
+            scale_x_continuous(expand = c(0, 0)) +
+            scale_y_continuous(expand = c(0, 0)) +
+            geom_hline(yintercept = 0, linetype = "dashed") +
+            # geom_hline(yintercept = max(prop_forest_df[prop_forest_df$taxa == "birds",]$y)) +
+            # geom_hline(yintercept = min(prop_forest_df[prop_forest_df$taxa == "birds",]$y)) +
+            theme(plot.margin = unit(c(0.25,0,0.68,0), "cm"))
+
+bird_map
+
+bird_density = ggplot(filter(prop_forest_df, taxa == "birds"), aes(y, prop_forest)) + 
+  stat_smooth(aes(col = after_stat(y)), se = F, linewidth = 5, n = 2500) +
+  coord_flip(ylim = c(0, 0.4)) +
+  theme_classic() +
+  scale_colour_viridis_c(limits = c(0, 0.75)) +
+  theme(legend.position = "none") +
+  labs(x = NULL, y = NULL) +
+  theme(text = element_text(size = 20),
+  axis.text= element_blank(),
+  axis.ticks = element_blank(),
+  axis.line = element_line(linewidth = 1),
+  axis.line.x = element_blank()) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  # geom_vline(xintercept = max(prop_forest_df[prop_forest_df$taxa == "birds",]$y)) +
+  # geom_vline(xintercept = min(prop_forest_df[prop_forest_df$taxa == "birds",]$y)) +
+  theme(plot.margin = unit(c(0.5,0.5,0.86,0), "cm")) +
+  xlim(-7367884, 7342230)
+
+bird_density
+
+b = plot_grid(bird_map, bird_density, rel_widths = c(1, 0.2), labels = c("B1", "B2"), label_size = 35)
+
+ggsave(paste0(gpath, "Paper/Figures/TaxaMaps/bird_map.png"), plot = b, width = 20, height = 8.3)
+
+## Make mammal map
+mammal_map = ggplot() + 
+            geom_sf(data = coast, fill = "grey70") + 
+            geom_spatraster(data = figure1_map_data$Mammals) + 
+            geom_sf(data = coast_outline, linewidth = 0.75) +
+            theme_void() + 
+            scale_fill_viridis_c(na.value = "transparent", breaks = c(0, 0.25, 0.5, 0.75),
+            limits = c(0,0.75)) + 
+            labs(fill = "Proportion of Forest Species") +
+            theme(legend.position = "none") +
+            scale_x_continuous(expand = c(0, 0)) +
+            scale_y_continuous(expand = c(0, 0)) +
+            geom_hline(yintercept = 0, linetype = "dashed") +
+            # geom_hline(yintercept = max(prop_forest_df[prop_forest_df$taxa == "mammals",]$y)) +
+            # geom_hline(yintercept = min(prop_forest_df[prop_forest_df$taxa == "mammals",]$y)) +
+            theme(plot.margin = unit(c(0.25,0,0.68,0), "cm"))
+
+mammal_map
+
+mammal_density = ggplot(filter(prop_forest_df, taxa == "mammals"), aes(y, prop_forest)) + 
+  stat_smooth(aes(col = after_stat(y)), se = F, linewidth = 5, n = 2500) +
+  coord_flip(ylim = c(0, 0.4)) +
+  theme_classic() +
+  scale_colour_viridis_c(limits = c(0, 0.75)) +
+  theme(legend.position = "none") +
+  labs(x = NULL, y = NULL) +
+  theme(text = element_text(size = 20),
+  axis.text= element_blank(),
+  axis.ticks = element_blank(),
+  axis.line = element_line(linewidth = 1),
+  axis.line.x = element_blank()) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  # geom_vline(xintercept = max(prop_forest_df[prop_forest_df$taxa == "mammals",]$y)) +
+  # geom_vline(xintercept = min(prop_forest_df[prop_forest_df$taxa == "mammals",]$y)) +
+  theme(plot.margin = unit(c(0.5,0.5,0.86,0), "cm")) +
+  xlim(-7367884, 7342230)
+
+mammal_density
+
+c = plot_grid(mammal_map, mammal_density, rel_widths = c(1, 0.2), labels = c("C1", "C2"), label_size = 35)
+
+ggsave(paste0(gpath, "Paper/Figures/TaxaMaps/mammal_map.png"), plot = c, width = 20, height = 8.3)
+
+## Make reptile map
+reptile_map = ggplot() + 
+            geom_sf(data = coast, fill = "grey70") + 
+            geom_spatraster(data = figure1_map_data$Reptiles) + 
+            geom_sf(data = coast_outline, linewidth = 0.75) +
+            theme_void() + 
+            scale_fill_viridis_c(na.value = "transparent", breaks = c(0, 0.25, 0.5, 0.75),
+            limits = c(0,0.75)) + 
+            labs(fill = "Proportion of Forest Species") +
+            theme(legend.position = "none") +
+            scale_x_continuous(expand = c(0, 0)) +
+            scale_y_continuous(expand = c(0, 0)) +
+            geom_hline(yintercept = 0, linetype = "dashed") +
+            # geom_hline(yintercept = max(prop_forest_df[prop_forest_df$taxa == "reptiles",]$y)) +
+            # geom_hline(yintercept = min(prop_forest_df[prop_forest_df$taxa == "reptiles",]$y)) +
+            theme(plot.margin = unit(c(0.25,0,0.68,0), "cm"))
+
+reptile_map
+
+reptile_density = ggplot(filter(prop_forest_df, taxa == "reptiles"), aes(y, prop_forest)) + 
+  stat_smooth(aes(col = after_stat(y)), se = F, linewidth = 5, n = 2500) +
+  coord_flip(ylim = c(0, 0.4)) +
+  theme_classic() +
+  scale_colour_viridis_c(limits = c(0, 0.75)) +
+  theme(legend.position = "none") +
+  labs(x = NULL, y = NULL) +
+  theme(text = element_text(size = 20),
+  axis.text= element_blank(),
+  axis.ticks = element_blank(),
+  axis.line = element_line(linewidth = 1),
+  axis.line.x = element_blank()) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  # geom_vline(xintercept = max(prop_forest_df[prop_forest_df$taxa == "reptiles",]$y)) +
+  # geom_vline(xintercept = min(prop_forest_df[prop_forest_df$taxa == "reptiles",]$y)) +
+  theme(plot.margin = unit(c(0.5,0.5,0.86,0), "cm")) +
+  xlim(-7367884, 7342230)
+
+reptile_density
+
+d = plot_grid(reptile_map, reptile_density, rel_widths = c(1, 0.2), labels = c("D1", "D2"), label_size = 35)
+
+ggsave(paste0(gpath, "Paper/Figures/TaxaMaps/reptile_map.png"), plot = d, width = 20, height = 8.3)

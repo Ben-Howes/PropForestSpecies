@@ -58,7 +58,7 @@ effect_size_plot = ggplot(filter(results, predictor != "Intercept"), aes(est, y 
 effect_size_plot
 
 # ggsave(paste0(gpath, "Paper/Figures/lat_effect_size_plot.png"), plot = effect_size_plot, width = 20, height = 10)
-
+# save(effect_size_plot, file = paste0(gpath, "Results/lat_effect_size_plot_rfile.Rdata"))
 
 #############################################
 ## Make predictions for examples in paper

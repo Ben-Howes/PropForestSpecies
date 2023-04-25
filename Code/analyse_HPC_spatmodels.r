@@ -31,12 +31,12 @@ results = mclapply(result_paths, read_csv, show_col_types = FALSE, mc.cores = 8)
 ## Change names of predictors for the plot
 results = results %>% 
            mutate(predictor = case_when(predictor == '(Intercept)' ~ "Intercept",
-                                        predictor == "prop_forest_area" ~ "Proportion Forested Area",
-                                        predictor == "prop_land_area_deforested" ~ "Proportion of Area Deforested",
+                                        predictor == "prop_forest_area" ~ "Current Forest Cover",
+                                        predictor == "prop_land_area_deforested" ~ "Historical Deforestation",
                                         predictor == "disturbances" ~ "Naturally Disturbed Area",
                                         predictor == "dist_equator_1000km" ~ "Latitude\n(Distance from Equator)",
-                                        predictor == "geological_forest" ~ "Long Term Forest Status",
-                                        predictor == "prop_forest_area:prop_land_area_deforested" ~ "Proportion Forested Area x\nProportion of Area Deforested"),
+                                        predictor == "geological_forest" ~ "Long-Term Forest Status",
+                                        predictor == "prop_forest_area:prop_land_area_deforested" ~ "Current Forest Cover x\nHistorical Deforestation"),
                 taxa = factor(str_to_title(taxa), levels = c("Amphibians", "Birds", "Mammals", "Reptiles")))
 
 ############################
@@ -58,9 +58,9 @@ effect_size_plot = ggplot(filter(results, predictor != "Intercept"), aes(est, y 
                                 legend.box.background = element_rect(colour = "black", 
                                 linewidth = 2),
                                 legend.margin = margin(t=50,r=20,b=1,l=10)) +
-                        scale_y_discrete(limits = rev(c("Proportion Forested Area", "Proportion of Area Deforested", 
-                                                        "Proportion Forested Area x\nProportion of Area Deforested",
-                                                        "Naturally Disturbed Area", "Long Term Forest Status",
+                        scale_y_discrete(limits = rev(c("Current Forest Cover", "Historical Deforestation", 
+                                                        "Current Forest Cover x\nHistorical Deforestation",
+                                                        "Naturally Disturbed Area", "Long-Term Forest Status",
                                                         "Latitude\n(Distance from Equator)")))
 
 effect_size_plot
@@ -150,19 +150,20 @@ predicted_results = predicted_results %>%
                         mutate(unscaled_prop_land_area_deforested = unscale(prop_land_area_deforested, "scaled_prop_land_area_deforested"))
 
 facet_labels =  c(
-  "-0.5"="Low Amount of\nDeforestation",
-  "0"="Average Amount of\nDeforestation",
-  "1"="High Amount of\nDeforestation"
+  "-0.5"="Low Amount of \nHistorical Deforestation",
+  "0"="Average Amount of \nHistorical Deforestation",
+  "1"="High Amount of\n Historical Deforestation"
 )
 
 interaction_term_plot = ggplot(predicted_results, aes(unscaled_prop_forest_area, est)) + 
-                        stat_lineribbon(alpha = 0.2, fill = "grey40") + 
+                        stat_lineribbon(alpha = 0.2, fill = "grey40", linewidth = 2.5) + 
                         facet_rep_wrap(. ~ prop_land_area_deforested, labeller = as_labeller(facet_labels)) +
                         theme_classic() +
-                        labs(x = "Proportion Forested Area", y = 
-                                "Probability of Forest Species") +
+                        labs(x = "Current Forest Cover", y = 
+                                "Proportion of Forest Species") +
                         theme(text = element_text(size = 35)) +
-                        scale_x_continuous(breaks = c(0, 0.25, 0.5, 0.75, 1))
+                        scale_x_continuous(breaks = c(0, 0.25, 0.5, 0.75, 1)) +
+                         theme(plot.margin = margin(0.5,1,0.5,0.5, "cm"))
 
 interaction_term_plot
 
