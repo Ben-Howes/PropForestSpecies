@@ -44,15 +44,15 @@ results = results %>%
 ############################
 
 effect_size_plot = ggplot(filter(results, predictor != "Intercept"), aes(est, y = predictor, col = taxa)) + 
-                        stat_pointinterval(aes(linetype = after_stat(xmin < 0 & xmax > 0)), 
-                                position = ggstance::position_dodgev(height = -0.5), linewidth = 15, 
+                        stat_pointinterval(aes(alpha = after_stat(xmin < 0 & xmax > 0)), 
+                                position = ggstance::position_dodgev(height = -0.6), linewidth = 15, 
                                 size = 25, .width = 0.95) +
                         geom_vline(xintercept = 0, linetype = "dotted", linewidth = 1) +
                         theme_classic() +
-                        labs(x = "Standardised Effect Size", y = NULL, col = "Taxa") +
+                        labs(x = "Standardised Effect Size", y = NULL, col = "Taxa", alpha = NULL) +
                         scale_color_viridis_d(limits = c("Amphibians", "Birds", "Mammals", "Reptiles")) +
                         theme(text = element_text(size = 35)) +
-                        guides(linetype = "none", col = guide_legend(byrow = TRUE, title.vjust = 5)) +
+                        guides(alpha = "none", col = guide_legend(byrow = TRUE, title.vjust = 5)) +
                         theme(legend.position = c(0.16, 0.75),
                                 legend.spacing.y = unit(-0.75, 'cm'),
                                 legend.box.background = element_rect(colour = "black", 
@@ -61,11 +61,11 @@ effect_size_plot = ggplot(filter(results, predictor != "Intercept"), aes(est, y 
                         scale_y_discrete(limits = rev(c("Current Forest Cover", "Historical Deforestation", 
                                                         "Current Forest Cover x\nHistorical Deforestation",
                                                         "Naturally Disturbed Area", "Long-Term Forest Status",
-                                                        "Latitude\n(Distance from Equator)")))
-
+                                                        "Latitude\n(Distance from Equator)"))) +
+                        scale_alpha_manual(values = c(1, 0.3))
 effect_size_plot
 
-# ggsave(paste0(gpath, "Paper/Figures/effect_size_plot.png"), plot = effect_size_plot, width = 20, height = 10)
+ggsave(paste0(gpath, "Paper/Figures/effect_size_plot.png"), plot = effect_size_plot, width = 20, height = 10)
 
 ############################
 ## Plot of interaction term between forest cover and historic forest loss

@@ -122,7 +122,7 @@ amphib_density = ggplot(filter(prop_forest_df, taxa == "amphibians"), aes(y, pro
 
 amphib_density
 
-a = plot_grid(amphib_map, amphib_density, rel_widths = c(1, 0.2), labels = c("A1)", "A2)"), label_size = 35)
+a = plot_grid(amphib_map, amphib_density, rel_widths = c(1, 0.2), labels = c("A1", "A2"), label_size = 35)
 
 ggsave(paste0(gpath, "Paper/Figures/TaxaMaps/amphibian_map.png"), plot = a, width = 20, height = 8.3)
 
