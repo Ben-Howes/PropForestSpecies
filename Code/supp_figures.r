@@ -27,6 +27,7 @@ names(dist) = "disturbances"
 
 ## Load basic world outline from GSHHS to use in cropping/masking
 coast = st_read("../Raw_Data/gshhg-shp-2.3.7/GSHHS_shp/c/GSHHS_c_L1.shp")
+behr = "+proj=cea +lon_0=0 +lat_ts=30 +x_0=0 +y_0=0 +datum=WGS84 +ellps=WGS84 +units=m +no_defs"
 coast = st_transform(coast, behr)
 coast_outline = st_cast(coast, "MULTILINESTRING")
 
