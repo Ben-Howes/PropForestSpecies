@@ -40,25 +40,25 @@ results = results %>%
 
 effect_size_plot = ggplot(filter(results, predictor != "Intercept"), aes(est, y = predictor, col = taxa)) + 
                         stat_pointinterval(aes(linetype = after_stat(xmin < 0 & xmax > 0)), 
-                                position = ggstance::position_dodgev(height = -0.5), linewidth = 15, 
+                                position = ggstance::position_dodgev(height = 0.4), linewidth = 15, 
                                 size = 25, .width = 0.95) +
                         geom_vline(xintercept = 0, linetype = "dotted", linewidth = 1) +
                         theme_classic() +
-                        labs(x = "Standardised Effect Size", y = NULL, col = "Taxa") +
+                        labs(x = "Standardised Effect Size", y = NULL, col = NULL) +
                         scale_color_viridis_d(limits = c("Amphibians", "Birds", "Mammals", "Reptiles")) +
                         theme(text = element_text(size = 35)) +
-                        guides(linetype = "none", col = guide_legend(byrow = TRUE, title.vjust = 5)) +
-                        theme(legend.position = c(0.15, 0.25),
-                                legend.spacing.y = unit(-0.75, 'cm'),
+                        guides(linetype = "none", col = guide_legend(byrow = TRUE, nrow = 1, title.vjust = -0.5)) +
+                        theme(legend.position = "bottom",legend.box="horizontal",
+                                legend.spacing.y = unit(0, 'cm'),
                                 legend.box.background = element_rect(colour = "black", 
                                 linewidth = 2),
-                                legend.margin = margin(t=50,r=20,b=1,l=10)) +
+                                legend.margin = margin(t=0,r=20,b=-5,l=15)) +
                         scale_y_discrete(limits = rev(c("Latitude\n(Distance from Equator)")))
 
 effect_size_plot
 
-# ggsave(paste0(gpath, "Paper/Figures/lat_effect_size_plot.png"), plot = effect_size_plot, width = 20, height = 10)
-# save(effect_size_plot, file = paste0(gpath, "Results/lat_effect_size_plot_rfile.Rdata"))
+ggsave(paste0(gpath, "Paper/Figures/lat_effect_size_plot.png"), plot = effect_size_plot, width = 20, height = 5)
+save(effect_size_plot, file = paste0(gpath, "Results/lat_effect_size_plot_rfile.Rdata"))
 
 #############################################
 ## Make predictions for examples in paper
