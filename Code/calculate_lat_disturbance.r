@@ -9,7 +9,7 @@ library(raster)
 library(maps)
 library(terra)
 
-gpath = "/home/ben/Documents/PhD/matrix_Response/"
+gpath = "/home/ben/Documents/PhD/PropForestSpecies/"
 setwd(gpath)
 
 ## Load in the disturbance shapefiles
@@ -31,4 +31,8 @@ names = c("fires", "glaciers", "storms")
 dist_rasts = rast(dist_list)
 names(dist_rasts) = names
 
-writeRaster(dist_rasts, paste0(gpath, "Data/Ranges/dist_rasts.tif"), overwrite = TRUE)
+## Sum disturbaces to get raster cells with number of disturbances (0 - 3)
+dist_rast = terra::mosaic(dist_rasts[[1]], dist_rasts[[2]], dist_rasts[[3]], fun = "sum")
+names(dist_rast) = "disturbances"
+
+writeRaster(dist_rast, paste0(gpath, "Data/Ranges/dist_rast.tif"), overwrite = TRUE)

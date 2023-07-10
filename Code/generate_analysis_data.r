@@ -73,12 +73,8 @@ forest_prop_maps = c(forest_prop_maps, loss_rast)
 ## Could differences be due to historic disturbances?
 ######################################################
 ## Load in data from Betts et al transformed into behrmann and categorised as 1 (disturbed) or 0 (undisturbed)
-dist_rasts = rast(paste0(gpath, "Data/Ranges/dist_rasts.tif"))
-dist_rasts = mask(dist_rasts, coast)
-
-## Combine all disturbances into one raster
-dist_rast = terra::mosaic(dist_rasts[[1]], dist_rasts[[2]], dist_rasts[[3]], fun = "max")
-names(dist_rast) = "disturbances"
+dist_rast = rast(paste0(gpath, "Data/Ranges/dist_rast.tif"))
+dist_rast = mask(dist_rast, coast)
 
 ggplot() + geom_spatraster(data = dist_rast) + geom_sf(data = coast_outline) + scale_fill_viridis_c(na.value = "white") +
   theme_classic() + labs(fill = "Disturbances")
@@ -111,13 +107,28 @@ holocene = terra::rasterize(holocene, template_raster, field = "type")
 
 forest_type = c(eocene, oligocene, miocene, pliocene, holocene)
 forest_type = as.data.frame(forest_type, xy = T) %>% rename("eocene" = 3, "oligocene" = 4, "miocene" = 5, "pliocene" = 6, "holocene" = 7)
-forest_type = forest_type %>% mutate(geological_forest = case_when(eocene == oligocene & oligocene == miocene & miocene == pliocene & pliocene == holocene ~ 5, 
+forest_type = forest_type %>% mutate(geological_forest_time = case_when(eocene == oligocene & oligocene == miocene & miocene == pliocene & pliocene == holocene ~ 5, 
 oligocene == miocene & miocene == pliocene & pliocene == holocene ~ 4 , miocene == pliocene & pliocene == holocene ~ 3, 
-pliocene == holocene ~ 2)) %>% mutate(geological_forest = ifelse(is.na(geological_forest), 1, geological_forest))
+pliocene == holocene ~ 2)) %>% mutate(geological_forest_time = ifelse(is.na(geological_forest_time), 1, geological_forest_time))
+
+forest_type$geological_forest_stability = 0
+
+for (i in 1:nrow(forest_type)) {
+  type = forest_type[i,7]
+  count = 1
+  if(!is.na(type)) {
+    for (j in 3:6) {
+      if(!is.na(forest_type[i,j])) {
+        if(type == forest_type[i,j]) {count = count + 1}
+      }
+    }
+  }
+  forest_type[i,"geological_forest_stability"] = count
+}
 
 ## Select just x y and geological forest, where the larger the value of geological forest the longer
 ## the forest in that area has continued to be the same forest type
-forest_type_rast = rast(dplyr::select(forest_type, x,y,geological_forest), crs = behr)
+forest_type_rast = rast(dplyr::select(forest_type, x,y,geological_forest_time, geological_forest_stability), crs = behr)
 forest_type_rast = mask(forest_type_rast, coast) 
 
 ggplot() + geom_spatraster(data = forest_type_rast) +
@@ -127,6 +138,38 @@ ggplot() + geom_spatraster(data = forest_type_rast) +
 
 ## Add this raster to the stack of proportion forest species rasters
 forest_prop_maps = c(forest_prop_maps, forest_type_rast)
+
+######################################################
+## Add data on the alpha diversity of plants
+## which is a good proxy for structural diversity
+######################################################
+
+alpha = rast(paste0(gpath, "Data/Ranges/plantAlpha.tif"))
+
+forest_prop_maps = c(forest_prop_maps, alpha)
+
+######################################################
+## Mask by forest ecoregions as we only expect forest
+## species in forest ecoregions
+## as well as geological forest type and
+## structural complexity only make sense in
+## forest ecoregions
+#######################################################
+
+## Load in ecoregions as we just want to show data for forested biomes
+ecoregions = st_read(paste0(gpath, "../Forest_thresholds/Data/Ecoregions2017/Ecoregions2017.shp"))
+
+## Convert to behrmann projection
+ecoregions = st_transform(ecoregions, behr)
+
+## Just keep shapefiles with the word "forest" in them
+ecoregions = ecoregions %>%
+    mutate(forest = ifelse(grepl("forest", BIOME_NAME, ignore.case = TRUE), 1, 0)) %>%
+    filter(forest == 1)
+
+## Then we need to crop our predicted threshold type raster
+## by these ecoregions, so we only keep data from the forest ecoregions
+forest_prop_maps = mask(forest_prop_maps, ecoregions)
 
 ######################################################
 ## Analysis
@@ -150,7 +193,8 @@ prop_forest_df = prop_forest_df %>% left_join(total_df) %>% relocate(x,y,prop_fo
 prop_forest_df = prop_forest_df %>% filter(!is.na(n_spec) & n_spec >= 10 & !is.na(land) & land > 0.1) %>%
   mutate(prop_forest = ifelse(is.na(prop_forest), 0, prop_forest), 
   prop_forest_area = ifelse(is.na(prop_forest_area), 0, prop_forest_area), dist_equator_1000km = abs(y/1000000),
-  disturbances = disturbances, geological_forest = case_when(geological_forest == 5 ~ 55, geological_forest == 4 ~ 33, geological_forest == 3 ~ 23,
-                                                                        geological_forest == 2 ~ 5, geological_forest == 1 ~ 0))
+  disturbances = disturbances, alpha_plant_diversity = ifelse(is.na(alpha_plant_diversity), 0, alpha_plant_diversity), 
+  geological_forest_time = case_when(geological_forest_time == 5 ~ 55, geological_forest_time == 4 ~ 33, geological_forest_time == 3 ~ 23,
+  geological_forest_time == 2 ~ 5, geological_forest_time == 1 ~ 0), geological_forest_time = ifelse(is.na(geological_forest_time), 0, geological_forest_time))
 
 write_csv(prop_forest_df, paste0(gpath, "Data/proportion_forest_species_analysis_data.csv"))

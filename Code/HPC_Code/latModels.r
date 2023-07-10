@@ -21,13 +21,9 @@ filtered_taxa = case_when(run %in% seq(1, 1000, by = 1) ~ "amphibians",
 # Run model accounting for spatial autocorrelation
 mod_data = read_csv(paste0(gpath, "Data/proportion_forest_species_analysis_data.csv"))
 
-mod_data = mod_data %>% mutate(prop_forest_area = scale(prop_forest_area),
-                                historical_forest_loss = scale(historical_forest_loss),
-                                dist_equator_1000km = scale(dist_equator_1000km),
-                                geological_forest = scale(geological_forest),
-                                disturbances = scale(disturbances))
+mod_data = mod_data %>% mutate(dist_equator_1000km = scale(dist_equator_1000km))
 
-mod_data = mod_data %>% filter(taxa == filtered_taxa) %>% slice_sample(prop = 0.1)
+mod_data = mod_data %>% filter(taxa == filtered_taxa) %>% slice_sample(prop = 0.1, replace = TRUE)
 
 ## Need to change the format a bit for spatial autocorrelation glmmTMB models
 mod_data$pos = numFactor(scale(mod_data$x), scale(mod_data$y))

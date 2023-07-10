@@ -115,6 +115,6 @@ mean_predicted_results = predicted_results %>%
         summarise(propForest = mean(est))
 
 ## Get % forest species at different latitudes for use in text
- mean_predicted_results$dist_equator_1000km %>% min()
- mean_predicted_results %>% filter(dist_equator_1000km > 4.9 & dist_equator_1000km < 5.1)
- mean_predicted_results %>% filter(dist_equator_1000km > 4.9 & dist_equator_1000km < 5.1)
+mean_predicted_results %>% slice_min(dist_equator_1000km)
+mean_predicted_results %>% filter(dist_equator_1000km > 1.9 & dist_equator_1000km < 2.1)
+mean_predicted_results %>% filter(dist_equator_1000km > 4.9 & dist_equator_1000km < 5.1)

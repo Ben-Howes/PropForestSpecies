@@ -24,8 +24,10 @@ mod_data = read_csv(paste0(gpath, "Data/proportion_forest_species_analysis_data.
 mod_data = mod_data %>% mutate(prop_forest_area = scale(prop_forest_area),
                                 prop_land_area_deforested = scale(prop_land_area_deforested),
                                 dist_equator_1000km = scale(dist_equator_1000km),
-                                geological_forest = scale(geological_forest),
-                                disturbances = scale(disturbances))
+                                geological_forest_time = scale(geological_forest_time),
+                                geological_forest_stability = scale(geological_forest_stability),
+                                disturbances = scale(disturbances),
+                                alpha_plant_diversity = scale(alpha_plant_diversity))
 
 mod_data = mod_data %>% filter(taxa == filtered_taxa) %>% slice_sample(prop = 0.1, replace = TRUE)
 
@@ -34,7 +36,8 @@ mod_data$pos = numFactor(scale(mod_data$x), scale(mod_data$y))
 # then create a dummy group factor to be used as a random term
 mod_data$ID = factor(rep(1, nrow(mod_data)))
 
-mod = glmmTMB(prop_forest ~ prop_forest_area*prop_land_area_deforested + disturbances + dist_equator_1000km + geological_forest + mat(pos + 0 | ID), 
+mod = glmmTMB(prop_forest ~ prop_forest_area*prop_land_area_deforested + disturbances + dist_equator_1000km + geological_forest_time + 
+  geological_forest_stability + alpha_plant_diversity + mat(pos + 0 | ID), 
   data = mod_data, weights = n_spec, family = "binomial")
 
 ## Get coefficients

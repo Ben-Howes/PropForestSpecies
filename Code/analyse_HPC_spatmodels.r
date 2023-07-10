@@ -35,7 +35,9 @@ results = results %>%
                                         predictor == "prop_land_area_deforested" ~ "Historical Deforestation",
                                         predictor == "disturbances" ~ "Naturally Disturbed Area",
                                         predictor == "dist_equator_1000km" ~ "Latitude\n(Distance from Equator)",
-                                        predictor == "geological_forest" ~ "Long-Term Forest Status",
+                                        predictor == "geological_forest_time" ~ "Geological Forest Time",
+                                        predictor == "geological_forest_stability" ~ "Geological Forest Stability",
+                                        predictor == "alpha_plant_diversity" ~ "Alpha Plant Diversity",
                                         predictor == "prop_forest_area:prop_land_area_deforested" ~ "Current Forest Cover x\nHistorical Deforestation"),
                 taxa = factor(str_to_title(taxa), levels = c("Amphibians", "Birds", "Mammals", "Reptiles")))
 
@@ -60,7 +62,8 @@ effect_size_plot = ggplot(filter(results, predictor != "Intercept"), aes(est, y 
                                 legend.margin = margin(t=50,r=20,b=1,l=10)) +
                         scale_y_discrete(limits = rev(c("Current Forest Cover", "Historical Deforestation", 
                                                         "Current Forest Cover x\nHistorical Deforestation",
-                                                        "Naturally Disturbed Area", "Long-Term Forest Status",
+                                                        "Naturally Disturbed Area", "Geological Forest Time",
+                                                        "Geological Forest Stability", "Alpha Plant Diversity",
                                                         "Latitude\n(Distance from Equator)"))) +
                         scale_alpha_manual(values = c(1, 0.3))
 effect_size_plot
