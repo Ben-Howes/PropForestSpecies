@@ -23,7 +23,7 @@ gpath = "/home/ben/Documents/PhD/PropForestSpecies/"
 setwd(gpath)
 
 ## Get paths to models
-result_paths = list.files(paste0(gpath, "Results/1000latResults/"), full.names = T)
+result_paths = list.files(paste0(gpath, "Results/1000latResultsForest/"), full.names = T)
 
 ## Read all the csvs in and bind them together
 results = mclapply(result_paths, read_csv, show_col_types = FALSE, mc.cores = 8) %>% bind_rows()

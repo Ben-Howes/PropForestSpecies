@@ -23,7 +23,7 @@ gpath = "/home/ben/Documents/PhD/PropForestSpecies/"
 setwd(gpath)
 
 ## Get paths to models
-result_paths = list.files(paste0(gpath, "Results/1000spatResults/"), full.names = T)
+result_paths = list.files(paste0(gpath, "Results/1000spatResultsForest/"), full.names = T)
 
 ## Read all the csvs in and bind them together
 results = mclapply(result_paths, read_csv, show_col_types = FALSE, mc.cores = 8) %>% bind_rows()
@@ -37,7 +37,7 @@ results = results %>%
                                         predictor == "dist_equator_1000km" ~ "Latitude\n(Distance from Equator)",
                                         predictor == "geological_forest_time" ~ "Geological Forest Time",
                                         predictor == "geological_forest_stability" ~ "Geological Forest Stability",
-                                        predictor == "alpha_plant_diversity" ~ "Alpha Plant Diversity",
+                                        predictor == "alpha_plant_diversity" ~ "Plant Alpha Diversity",
                                         predictor == "prop_forest_area:prop_land_area_deforested" ~ "Current Forest Cover x\nHistorical Deforestation"),
                 taxa = factor(str_to_title(taxa), levels = c("Amphibians", "Birds", "Mammals", "Reptiles")))
 
@@ -63,7 +63,7 @@ effect_size_plot = ggplot(filter(results, predictor != "Intercept"), aes(est, y 
                         scale_y_discrete(limits = rev(c("Current Forest Cover", "Historical Deforestation", 
                                                         "Current Forest Cover x\nHistorical Deforestation",
                                                         "Naturally Disturbed Area", "Geological Forest Time",
-                                                        "Geological Forest Stability", "Alpha Plant Diversity",
+                                                        "Geological Forest Stability", "Plant Alpha Diversity",
                                                         "Latitude\n(Distance from Equator)"))) +
                         scale_alpha_manual(values = c(1, 0.3))
 effect_size_plot
