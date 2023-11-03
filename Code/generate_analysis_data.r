@@ -167,6 +167,17 @@ ecoregions = ecoregions %>%
     mutate(forest = ifelse(grepl("forest", BIOME_NAME, ignore.case = TRUE), 1, 0)) %>%
     filter(forest == 1)
 
+## Create a raster for the ecoregions so we can give each pixel
+## a factor value of which ecoregion they were in - could be useful for spatial autocorrelation
+behr = "+proj=cea +lon_0=0 +lat_ts=30 +x_0=0 +y_0=0 +datum=WGS84 +ellps=WGS84 +units=m +no_defs"
+template_raster = rast() %>% project(behr)
+
+ecoNameRast = rasterize(ecoregions, template_raster, field = "ECO_NAME", touches = TRUE)
+realmRast = rasterize(ecoregions, template_raster, field = "REALM", touches = TRUE)
+biomeNameRast = rasterize(ecoregions, template_raster, field = "BIOME_NAME", touches = TRUE)
+
+forest_prop_maps = c(forest_prop_maps, ecoregionsRast, realmRast, biomeNameRast)
+
 ## Then we need to crop our predicted threshold type raster
 ## by these ecoregions, so we only keep data from the forest ecoregions
 forest_prop_maps = mask(forest_prop_maps, ecoregions)

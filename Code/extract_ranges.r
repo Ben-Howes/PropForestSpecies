@@ -136,6 +136,8 @@ taxa_habitats = taxa_habitats %>% group_by(species) %>%
             total_habitats = n(), taxa = taxa[[1]]) %>% mutate(forest = ifelse(forest_habitats == total_habitats, 1, 
                                       ifelse(nonforest_habitats == total_habitats, 0, "generalist")))
 
+write_csv(taxa_habitats, paste0(gpath, "Data/taxa_habitats.csv"))
+
 ## Since the birdlife dataset has a few different column names and some missing column names we need to add them
 ## Firstly change species names to binomial and shape to geometry to match IUCN
 ## Then need to add marine column to remove marine species

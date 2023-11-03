@@ -40,11 +40,11 @@ results = results %>%
 
 effect_size_plot = ggplot(filter(results, predictor != "Intercept"), aes(est, y = predictor, col = taxa)) + 
                         stat_pointinterval(aes(linetype = after_stat(xmin < 0 & xmax > 0)), 
-                                position = ggstance::position_dodgev(height = 0.4), linewidth = 15, 
+                                position = ggstance::position_dodgev(height = -0.4), linewidth = 15, 
                                 size = 25, .width = 0.95) +
                         geom_vline(xintercept = 0, linetype = "dotted", linewidth = 1) +
                         theme_classic() +
-                        labs(x = "Standardised Effect Size", y = NULL, col = NULL) +
+                        labs(x = "Standardised Effect Size", y = "Taxa", col = NULL) +
                         scale_color_viridis_d(limits = c("Amphibians", "Birds", "Mammals", "Reptiles")) +
                         theme(text = element_text(size = 35)) +
                         guides(linetype = "none", col = guide_legend(byrow = TRUE, nrow = 1, title.vjust = -0.5)) +
@@ -53,12 +53,12 @@ effect_size_plot = ggplot(filter(results, predictor != "Intercept"), aes(est, y 
                                 legend.box.background = element_rect(colour = "black", 
                                 linewidth = 2),
                                 legend.margin = margin(t=0,r=20,b=-5,l=15)) +
-                        scale_y_discrete(limits = rev(c("Latitude\n(Distance from Equator)")))
+                        scale_y_discrete(limits = rev(c("Latitude\n(Distance from Equator)")), labels = NULL)
 
 effect_size_plot
 
 ggsave(paste0(gpath, "Paper/Figures/lat_effect_size_plot.png"), plot = effect_size_plot, width = 20, height = 5)
-save(effect_size_plot, file = paste0(gpath, "Results/lat_effect_size_plot_rfile.Rdata"))
+ggsave(paste0(gpath, "Paper/Figures/lat_effect_size_plot.pdf"), plot = effect_size_plot, width = 20, height = 5, dpi = 300)
 
 #############################################
 ## Make predictions for examples in paper
@@ -114,7 +114,20 @@ mean_predicted_results = predicted_results %>%
         group_by(dist_equator_1000km) %>%
         summarise(propForest = mean(est))
 
+## Convert distances to latitude
+## So distance from equator need to be multipled by 1000000 to get to metres
+## and an arbitrary x value of 0 added to the data frame
+mean_predicted_results = mean_predicted_results %>% mutate(y = dist_equator_1000km*1000000, x = 0)
+sfPredictions = st_as_sf(mean_predicted_results, coords = c("x", "y"))
+st_crs(sfPredictions) = behr
+
+## Transform from behrmann to epsg 4326
+sfPredictions = st_transform(sfPredictions, 4326)
+
+## Split xy coordinates to get lat and long
+sfPredictions = sfPredictions %>% mutate(x = st_coordinates(.)[,1], y = st_coordinates(.)[,2]) %>% as.data.frame()
+
 ## Get % forest species at different latitudes for use in text
-mean_predicted_results %>% slice_min(dist_equator_1000km)
-mean_predicted_results %>% filter(dist_equator_1000km > 1.9 & dist_equator_1000km < 2.1)
-mean_predicted_results %>% filter(dist_equator_1000km > 4.9 & dist_equator_1000km < 5.1)
+sfPredictions %>% slice_min(y)
+sfPredictions %>% filter(y > 29 & y < 31)
+sfPredictions %>% filter(y > 49 & y < 51)
