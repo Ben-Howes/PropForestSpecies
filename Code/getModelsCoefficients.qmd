@@ -1,0 +1,87 @@
+---
+title: "Model Coefficients"
+author: "Benjamin Howes"
+date: "10/1/2023"
+format: pdf
+header-includes:
+   - \usepackage[singlelinecheck=false]{caption}
+---
+
+```{r, include = FALSE, warnings = FALSE}
+#######################################
+## Get the model coefficients of our
+## GLMMs with zero inflation
+## and make figures
+#######################################
+
+library(tidyverse) 
+library(broom)
+library(broom.mixed) ## tidy
+library(glmmTMB) ## glmmTMB models
+library(piecewiseSEM) ## rsquared
+library(knitr)
+library(kableExtra)
+
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, fig.pos = "H")
+
+gpath = "/home/ben/Documents/PhD/PropForestSpecies/"
+setwd(gpath)
+
+## Load models
+load("Results/randLatModels.RData")
+load("Results/randFullModels.RData")
+load("Results/taxaLatModel.RData")
+load("Results/taxaFullModel.RData")
+
+## Get coefficients in table format
+tables = lapply(c(randLatModels, list(taxa = taxaLatModel)), function(x) {
+    tidy(x, conf.int = TRUE) %>%
+    filter(effect == "fixed" & component == "cond") %>%
+    dplyr::select(term, estimate, std.error, statistic, p.value, conf.low, conf.high) %>%
+    rename("Predictor" = 1, "Estimate" = 2, "Standard Error" = 3, "z-value" = 4, "p-value" = 5, "95% low" = 6, "95% high" = 7) %>%
+    mutate_if(is.double, round, digits = 2) %>%
+    mutate(Predictor = ifelse(Predictor == "scaled_dist_equator_1000km", "Latitude(Distance from Equator)", Predictor))})
+```
+
+# Model coefficients for latitude only models
+
+```{r, results="asis", echo = FALSE}
+
+for (i in names(tables)) {
+    table = tables[[i]]
+    table = kable(table, 
+    caption = paste0("Coefficients for latitude only model for ", i),
+    format = "latex") %>%
+    kable_classic() %>%
+    kable_styling(full_width = TRUE, latex_options = "HOLD_position")
+    print(table)
+}
+```
+
+```{r, include = FALSE, warnings = FALSE}
+
+## Get coefficients in table format
+tables = lapply(c(randFullModels, list(taxa = taxaFullModel)), function(x) {
+    tidy(x, conf.int = TRUE) %>%
+    filter(effect == "fixed" & component == "cond") %>%
+    dplyr::select(term, estimate, std.error, statistic, p.value, conf.low, conf.high) %>%
+    rename("Predictor" = 1, "Estimate" = 2, "Standard Error" = 3, "z-value" = 4, "p-value" = 5, "95% low" = 6, "95% high" = 7) %>%
+    mutate_if(is.double, round, digits = 2) %>%
+    mutate(Predictor = gsub("_", " ", Predictor))}) 
+
+```
+
+## Model coefficients for models including all predictor variables
+
+```{r, results="asis", echo = FALSE}
+
+for (i in names(tables)) {
+    table = tables[[i]]
+    table = kable(table, 
+    caption = paste0("Coefficients for full model for ", i),
+    format = "latex") %>%
+    kable_classic() %>%
+    kable_styling(full_width = TRUE, latex_options = "HOLD_position")
+    print(table)
+}
+```

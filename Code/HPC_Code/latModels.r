@@ -5,44 +5,37 @@
 ## and from AVONET for birds
 ##########################################################
 
-library(tidyverse)
-library(glmmTMB)
+library(dplyr)
+library(mgcv)
+library(spdep)
 
 gpath = "/rds/general/user/bh719/home/prop_forest_species/"
 setwd(gpath)
 
 run = commandArgs(trailingOnly = TRUE)
 
-filtered_taxa = case_when(run %in% seq(1, 1000, by = 1) ~ "amphibians", 
-                          run %in% seq(1001, 2000, by = 1) ~ "birds", 
-                          run %in% seq(2001, 3000, by = 1) ~ "mammals",
-                          run %in% seq(3001, 4000, by = 1) ~ "reptiles")
+filtered_taxa = case_when(run == 1 ~ "amphibians", 
+                          run == 2 ~ "birds", 
+                          run == 3 ~ "mammals",
+                          run == 4 ~ "reptiles")
+
+size = case_when(run == 1 ~ 4031043, 
+                        run == 2 ~ 2464440, 
+                          run == 3 ~ 2745890,
+                          run == 4 ~ 2735834)
 
 # Run model accounting for spatial autocorrelation
-mod_data = read_csv(paste0(gpath, "Data/proportion_forest_species_analysis_data.csv"))
+load(paste0(gpath, "Data/sfDat.RData"))
+mod_data = dat
 
 mod_data = mod_data %>% mutate(dist_equator_1000km = scale(dist_equator_1000km))
+mod_data = mod_data %>% filter(taxa == filtered_taxa)
 
-mod_data = mod_data %>% filter(taxa == filtered_taxa) %>% slice_sample(prop = 0.1, replace = TRUE)
+mod_data = mutate(mod_data, id = as.factor(seq(1: nrow(mod_data))))
+rook = dnearneigh(mod_data, d1 = 0, d2 = size, row.names = mod_data$id)
+names(rook) = attr(rook, "region.id")
 
-## Need to change the format a bit for spatial autocorrelation glmmTMB models
-mod_data$pos = numFactor(scale(mod_data$x), scale(mod_data$y))
-# then create a dummy group factor to be used as a random term
-mod_data$ID = factor(rep(1, nrow(mod_data)))
+mod = bam(prop_forest ~ scaled_dist_equator_1000km + s(id, bs = "mrf", xt = list(nb = rook)), 
+  data = mod_data, family = binomial, weights = n_spec, discrete = TRUE, nthreads = 64)
 
-mod = glmmTMB(prop_forest ~ dist_equator_1000km + mat(pos + 0 | ID), 
-  data = mod_data, weights = n_spec, family = "binomial")
-
-## Get coefficients
-coef = summary(mod)$coef$cond %>%
-        as.data.frame() %>%
-        rename("est" = 1, "std_err" = 2, "z_val" = 3, "p_val" = 4)
-
-CI = confint(mod, parm = rownames(coef)) %>% 
-      as.data.frame() %>% 
-      rename("low_2.5" = 1,"up_97.5" = 2, "est" = 3) %>%
-      dplyr::select(-est)
-
-final = data.frame(predictor = rownames(coef), coef, CI, taxa = filtered_taxa, run = run)
-
-write_csv(final, paste0(gpath, "Results/", filtered_taxa, run, "_lat_mod.csv"))
+save(mod, file = paste0(gpath, "Results/", filtered_taxa, "_lat_mod.RData"))
