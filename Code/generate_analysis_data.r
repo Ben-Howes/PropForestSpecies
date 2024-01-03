@@ -176,7 +176,7 @@ ecoNameRast = rasterize(ecoregions, template_raster, field = "ECO_NAME", touches
 realmRast = rasterize(ecoregions, template_raster, field = "REALM", touches = TRUE)
 biomeNameRast = rasterize(ecoregions, template_raster, field = "BIOME_NAME", touches = TRUE)
 
-forest_prop_maps = c(forest_prop_maps, ecoregionsRast, realmRast, biomeNameRast)
+forest_prop_maps = c(forest_prop_maps, ecoNameRast, realmRast, biomeNameRast)
 
 ## Then we need to crop our predicted threshold type raster
 ## by these ecoregions, so we only keep data from the forest ecoregions
@@ -201,11 +201,17 @@ prop_forest_df = prop_forest_df %>% left_join(total_df) %>% relocate(x,y,prop_fo
 ## Also use a cut off for what cells are included based on total species from which proportions are calculated
 ## and the total land area
 ## In this case a minimum of 10 total species, and 100km2 land area
-prop_forest_df = prop_forest_df %>% filter(!is.na(n_spec) & n_spec >= 10 & !is.na(land) & land > 0.1) %>%
+prop_forest_df = prop_forest_df %>% filter(!is.na(n_spec) & !is.na(land) & land > 0.1) %>%
   mutate(prop_forest = ifelse(is.na(prop_forest), 0, prop_forest), 
-  prop_forest_area = ifelse(is.na(prop_forest_area), 0, prop_forest_area), dist_equator_1000km = abs(y/1000000),
+  prop_forest_area = ifelse(is.na(prop_forest_area), 0, prop_forest_area), 
+  prop_land_area_deforested = ifelse(is.na(prop_land_area_deforested), 0, prop_land_area_deforested),
+  dist_equator_1000km = abs(y/1000000),
   disturbances = disturbances, alpha_plant_diversity = ifelse(is.na(alpha_plant_diversity), 0, alpha_plant_diversity), 
   geological_forest_time = case_when(geological_forest_time == 5 ~ 55, geological_forest_time == 4 ~ 33, geological_forest_time == 3 ~ 23,
   geological_forest_time == 2 ~ 5, geological_forest_time == 1 ~ 0), geological_forest_time = ifelse(is.na(geological_forest_time), 0, geological_forest_time))
 
+## Remove areas with small proportion of forest species for plotting
+prop_forest_df_plot = prop_forest_df %>% filter(n_spec >= 10 & land > 0.1)
+
 write_csv(prop_forest_df, paste0(gpath, "Data/proportion_forest_species_analysis_data.csv"))
+write_csv(prop_forest_df_plot, paste0(gpath, "Data/proportion_forest_species_plot_data.csv"))

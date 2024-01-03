@@ -7,7 +7,6 @@
 
 library(dplyr)
 library(mgcv)
-library(spdep)
 
 gpath = "/rds/general/user/bh719/home/prop_forest_species/"
 setwd(gpath)
@@ -19,23 +18,21 @@ filtered_taxa = case_when(run == 1 ~ "amphibians",
                           run == 3 ~ "mammals",
                           run == 4 ~ "reptiles")
 
-size = case_when(run == 1 ~ 4031043, 
-                        run == 2 ~ 2464440, 
-                          run == 3 ~ 2745890,
-                          run == 4 ~ 2735834)
-
 # Run model accounting for spatial autocorrelation
-load(paste0(gpath, "Data/sfDat.RData"))
-mod_data = dat
+mod_data = read.csv(paste0(gpath, "Data/proportion_forest_species_analysis_data.csv"))
 
-mod_data = mod_data %>% mutate(dist_equator_1000km = scale(dist_equator_1000km))
-mod_data = mod_data %>% filter(taxa == filtered_taxa)
+mod_data = mod_data %>% mutate(scaled_prop_forest_area = scale(prop_forest_area)[,1],
+                        scaled_prop_land_area_deforested = scale(prop_land_area_deforested)[,1],
+                        scaled_dist_equator_1000km = scale(dist_equator_1000km)[,1],
+                        scaled_geological_forest_time = scale(geological_forest_time)[,1],
+                        scaled_geological_forest_stability = scale(geological_forest_stability)[,1],
+                        scaled_alpha_plant_diversity= scale(alpha_plant_diversity)[,1],
+                        scaled_disturbances = scale(disturbances)[,1],
+                        ECO_NAME = as.factor(ECO_NAME)) 
 
-mod_data = mutate(mod_data, id = as.factor(seq(1: nrow(mod_data))))
-rook = dnearneigh(mod_data, d1 = 0, d2 = size, row.names = mod_data$id)
-names(rook) = attr(rook, "region.id")
+mod_data = mod_data %>% filter(taxa == filtered_taxa) %>% mutate(id = as.factor(1:nrow(.)))
 
-mod = bam(prop_forest ~ scaled_dist_equator_1000km + s(id, bs = "mrf", xt = list(nb = rook)), 
+mod = bam(prop_forest ~ scaled_dist_equator_1000km + s(x, y, bs = "gp") + s(id, bs = "re"),
   data = mod_data, family = binomial, weights = n_spec, discrete = TRUE, nthreads = 64)
 
 save(mod, file = paste0(gpath, "Results/", filtered_taxa, "_lat_mod.RData"))

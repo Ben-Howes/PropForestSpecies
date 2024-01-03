@@ -23,7 +23,7 @@ gpath = "/home/ben/Documents/PhD/PropForestSpecies/"
 setwd(gpath)
 
 ## Read in data
-prop_forest_df = read_csv(paste0(gpath, "Data/proportion_forest_species_analysis_data.csv"))
+prop_forest_df = read_csv(paste0(gpath, "Data/proportion_forest_species_plot_data.csv"))
 
 ## Make behrmann template raster for use in transforming in future
 behr = "+proj=cea +lon_0=0 +lat_ts=30 +x_0=0 +y_0=0 +datum=WGS84 +ellps=WGS84 +units=m +no_defs"
