@@ -1,7 +1,5 @@
 ---
 title: "Model Coefficients"
-author: "Benjamin Howes"
-date: "10/1/2023"
 format: pdf
 header-includes:
    - \usepackage[singlelinecheck=false]{caption}
@@ -35,10 +33,9 @@ load("Results/taxaFullModel.RData")
 
 ## Get coefficients in table format
 tables = lapply(c(randLatModels, list(taxa = taxaLatModel)), function(x) {
-    tidy(x, conf.int = TRUE) %>%
-    filter(effect == "fixed" & component == "cond") %>%
-    dplyr::select(term, estimate, std.error, statistic, p.value, conf.low, conf.high) %>%
-    rename("Predictor" = 1, "Estimate" = 2, "Standard Error" = 3, "z-value" = 4, "p-value" = 5, "95% low" = 6, "95% high" = 7) %>%
+    tidy(x, parametric = TRUE, conf.int = TRUE) %>%
+    dplyr::select(term, estimate, std.error, conf.low, conf.high) %>%
+    rename("Predictor" = 1, "Estimate" = 2, "Standard Error" = 3, "95% Low" = 4, "95% High" = 5) %>%
     mutate_if(is.double, round, digits = 2) %>%
     mutate(Predictor = ifelse(Predictor == "scaled_dist_equator_1000km", "Latitude(Distance from Equator)", Predictor))})
 ```
@@ -62,16 +59,25 @@ for (i in names(tables)) {
 
 ## Get coefficients in table format
 tables = lapply(c(randFullModels, list(taxa = taxaFullModel)), function(x) {
-    tidy(x, conf.int = TRUE) %>%
-    filter(effect == "fixed" & component == "cond") %>%
-    dplyr::select(term, estimate, std.error, statistic, p.value, conf.low, conf.high) %>%
-    rename("Predictor" = 1, "Estimate" = 2, "Standard Error" = 3, "z-value" = 4, "p-value" = 5, "95% low" = 6, "95% high" = 7) %>%
+    tidy(x, parametric = TRUE, conf.int = TRUE) %>%
+    dplyr::select(term, estimate, std.error, conf.low, conf.high) %>%
+    rename("Predictor" = 1, "Estimate" = 2, "Standard Error" = 3, "95% Low" = 4, "95% High" = 5) %>%
     mutate_if(is.double, round, digits = 2) %>%
-    mutate(Predictor = gsub("_", " ", Predictor))}) 
+    mutate(Predictor = gsub("scaled_", "", Predictor)) %>%
+    mutate(Predictor = case_when(Predictor == '(Intercept)' ~ "Intercept",
+        Predictor == "prop_forest_area" ~ "Current Forest Cover",
+        Predictor == "prop_land_area_deforested" ~ "Historical Deforestation",
+        Predictor == "disturbances" ~ "Naturally Disturbed Area",
+        Predictor == "dist_equator_1000km" ~ "Latitude\n(Distance from Equator)",
+        Predictor == "geological_forest_time" ~ "Geological Forest Time",
+        Predictor == "geological_forest_stability" ~ "Geological Forest Stability",
+        Predictor == "alpha_plant_diversity" ~ "Plant Alpha Diversity",
+        Predictor == "altitude" ~ "Altitude",
+        Predictor == "n_spec" ~ "Total Species Richness"))}) 
 
 ```
 
-## Model coefficients for models including all predictor variables
+# Model coefficients for models including all predictor variables
 
 ```{r, results="asis", echo = FALSE}
 

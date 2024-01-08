@@ -145,8 +145,14 @@ forest_prop_maps = c(forest_prop_maps, forest_type_rast)
 ######################################################
 
 alpha = rast(paste0(gpath, "Data/Ranges/plantAlpha.tif"))
-
 forest_prop_maps = c(forest_prop_maps, alpha)
+
+######################################################
+## Add data on the mean altitude of the pixels
+######################################################
+
+altitude = rast(paste0(gpath, "Data/Ranges/altitude.tif"))
+forest_prop_maps = c(forest_prop_maps, altitude)
 
 ######################################################
 ## Mask by forest ecoregions as we only expect forest
@@ -198,13 +204,12 @@ prop_forest_df = as.data.frame(forest_prop_maps, xy = T) %>% dplyr::select(-tota
 prop_forest_df = prop_forest_df %>% left_join(total_df) %>% relocate(x,y,prop_forest,n_spec,prop_forest_area,taxa)
 
 ## Remove rows that have no species and no land area
-## Also use a cut off for what cells are included based on total species from which proportions are calculated
-## and the total land area
-## In this case a minimum of 10 total species, and 100km2 land area
+## Also use a cut off for what cells are included based on the total land area
+## In this case a minimum of 10% land area
 prop_forest_df = prop_forest_df %>% filter(!is.na(n_spec) & !is.na(land) & land > 0.1) %>%
   mutate(prop_forest = ifelse(is.na(prop_forest), 0, prop_forest), 
   prop_forest_area = ifelse(is.na(prop_forest_area), 0, prop_forest_area), 
-  prop_land_area_deforested = ifelse(is.na(prop_land_area_deforested), 0, prop_land_area_deforested),
+  prop_land_area_deforested = ifelse(is.na(prop_land_area_deforested), 0, ifelse(prop_land_area_deforested > 1, 1, prop_land_area_deforested)),
   dist_equator_1000km = abs(y/1000000),
   disturbances = disturbances, alpha_plant_diversity = ifelse(is.na(alpha_plant_diversity), 0, alpha_plant_diversity), 
   geological_forest_time = case_when(geological_forest_time == 5 ~ 55, geological_forest_time == 4 ~ 33, geological_forest_time == 3 ~ 23,
