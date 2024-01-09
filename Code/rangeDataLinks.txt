@@ -1,2 +1,0 @@
-IUCN: https://www.iucnredlist.org/resources/spatial-data-download
-BirdLife: https://datazone.birdlife.org/species/requestdis
