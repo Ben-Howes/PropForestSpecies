@@ -87,6 +87,7 @@ latEffectPlot = ggplot(filter(latResults, term != "Intercept"), aes(estimate, te
 latEffectPlot
 
 ggsave(paste0(gpath, "Paper/Figures/latEffectPlot.png"), plot = latEffectPlot, width = 20, height = 4)
+ggsave(paste0(gpath, "Paper/Figures/latEffectPlot.pdf"), plot = latEffectPlot, width = 20, height = 4)
 
 ## FULL RESULTS PLOT
 
@@ -114,6 +115,7 @@ effectPlot = ggplot(filter(fullResults, term != "Intercept"), aes(estimate, term
 effectPlot
 
 ggsave(paste0(gpath, "Paper/Figures/effectPlot.png"), plot = effectPlot, width = 20, height = 12)
+ggsave(paste0(gpath, "Paper/Figures/effectPlot.pdf"), plot = effectPlot, width = 20, height = 12)
 
 #############################################
 ## Make predictions for examples in paper

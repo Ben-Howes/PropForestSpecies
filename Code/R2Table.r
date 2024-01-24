@@ -44,9 +44,16 @@ fullResults = bind_rows(fullResults) %>%
     rename("Taxa" = 1, "Full Model R2" = 2) %>% 
     arrange(-desc(Taxa)) %>%
     left_join(latResults, by = "Taxa") %>%
-    relocate(1,3,2)
+    relocate(1,3,2) %>%
+    rename("Latitude-Only Model R<sup>2</sup>" = 2,
+        "Full Model R<sup>2</sup>" = 3)
 
-kable(fullResults, align = c("l", "c", "c")) %>%
+kable(fullResults, align = c("l", "c", "c"), escape = F) %>%
 kable_classic() %>%
 kable_styling(latex_options = c("striped", "scale_down"), full_width = FALSE) %>%
 save_kable(file = "Paper/Tables/R2Table.png", zoom = 2)
+
+kable(fullResults, align = c("l", "c", "c"), escape = F) %>%
+kable_classic() %>%
+kable_styling(latex_options = c("striped", "scale_down"), full_width = FALSE) %>%
+save_kable(file = "Paper/Tables/R2Table.pdf")

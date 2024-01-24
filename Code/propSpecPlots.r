@@ -75,7 +75,8 @@ ggsave(paste0(gpath, "Paper/Figures/propVsRich.png"), plot = propVsRich, width =
 ggarrange(latDotPlot + theme(legend.position = c(0.315, 0.935), legend.text = element_text(size = 15)), 
     propVsRich + labs(y = NULL), ncol = 2, nrow = 1, labels = c("A", "B"), font.label = list(size = 25))
     
-ggsave(paste0(gpath, "Paper/Figures/combinedFigure1.png"), width = 20, height = 12)
+ggsave(paste0(gpath, "Paper/Figures/propRichPlot.png"), width = 20, height = 12)
+ggsave(paste0(gpath, "Paper/Figures/propRichPlot.pdf"), width = 20, height = 12)
 
 #######################################
 ## Run model
